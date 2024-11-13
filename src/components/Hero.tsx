@@ -26,16 +26,11 @@ export default function Hero() {
   return (
     <section className="relative h-screen flex items-center justify-center overflow-hidden">
       <div ref={heroRef} className="absolute inset-0">
-        <video
-          autoPlay
-          muted
-          loop
-          playsInline
+        <img
+          src="/Hero.png" // Update this path to match your public directory structure
+          alt="Hero Background"
           className="w-full h-full object-cover"
-        >
-          <source src="https://player.vimeo.com/external/492094335.sd.mp4?s=c5c2f8f4a2c4b0f6c7b4b4b4b4b4b4b4b4b4b4b4" type="video/mp4" />
-          Your browser does not support the video tag.
-        </video>
+        />
         <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-zinc-900"></div>
       </div>
       
