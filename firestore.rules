@@ -6,7 +6,7 @@ service cloud.firestore {
     
     match /nominees/{nomineeId} {
       allow read: if true;
-      allow write: if false; // Change this to true if you need to write
+      allow write: if true; // Change this to true if you need to write
     }
     
     match /events/{eventId} {

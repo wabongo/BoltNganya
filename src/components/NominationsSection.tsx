@@ -2,16 +2,22 @@ import { useEffect } from 'react';
 import { Award } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import NominationCard from './NominationCard';
+import { Nominee } from '../types';
 
 export default function NominationsSection() {
   const { categories, nominees, fetchCategories, fetchNominees, loading, error } = useStore();
 
   useEffect(() => {
     const loadData = async () => {
+      console.log('Fetching data...');
       await Promise.all([fetchCategories(), fetchNominees()]);
+      console.log('Data fetched');
     };
     loadData();
-  }, []);
+  }, [fetchCategories, fetchNominees]);
+  
+  console.log('Current categories:', categories);
+  console.log('Current nominees:', nominees);
 
   if (loading) {
     return (
@@ -58,20 +64,20 @@ export default function NominationsSection() {
   return (
     <section id="nominations" className="py-20 px-4">
       <div className="max-w-7xl mx-auto">
-        <div className="flex items-center space-x-4 mb-12">
-          <Award className="w-10 h-10 text-yellow-400" />
-          <h2 className="text-4xl font-bold text-white">Nominations</h2>
-        </div>
         <div className="grid gap-8 md:grid-cols-2">
           {categories.map((category) => {
-            const categoryNominees = nominees.filter(n => n.categoryId === category.id);
+            console.log(`Filtering nominees for category: ${category.name} (ID: ${category.id})`);
+            const categoryNominees = nominees.filter(nominee => {
+              console.log(`Nominee ID: ${nominee.id}, Category ID: ${nominee.categoryId}`);
+              return nominee.categoryId === category.id;
+            });
+            console.log(`Nominees Count for ${category.name}: ${categoryNominees.length}`);
             return (
-              <div key={category.id} className="animate-on-scroll opacity-0">
-                <NominationCard
-                  category={category}
-                  nominees={categoryNominees}
-                />
-              </div>
+              <NominationCard
+                key={category.id}
+                category={category}
+                nominees={categoryNominees}
+              />
             );
           })}
         </div>

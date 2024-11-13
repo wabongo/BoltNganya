@@ -9,8 +9,15 @@ interface NominationCardProps {
 }
 
 export default function NominationCard({ category, nominees }: NominationCardProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(true);
   const { voteForNominee, loading } = useStore();
+
+  // Conditional logging for development environment
+  if (process.env.NODE_ENV === 'development') {
+    console.log('Category Name:', category.name);
+    console.log('Category ID:', category.id);
+    console.log('Nominees Count:', nominees.length);
+  }
 
   const handleVote = async (nomineeId: string) => {
     try {
@@ -51,8 +58,12 @@ export default function NominationCard({ category, nominees }: NominationCardPro
           isExpanded ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'
         } overflow-hidden`}
       >
+        <div className="p-2 text-white">
+          Debug: {nominees?.length || 0} nominees
+        </div>
+        
         <div className="p-6 space-y-6">
-          {nominees.length === 0 ? (
+          {!nominees || nominees.length === 0 ? (
             <p className="text-gray-400 text-center py-4">No nominees available for this category.</p>
           ) : (
             nominees.map((nominee) => (

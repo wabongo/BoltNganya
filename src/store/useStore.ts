@@ -1,6 +1,7 @@
 import { create } from 'zustand';
-import { collection, getDocs, doc, updateDoc, increment, query, where, addDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, updateDoc, increment, query, where } from 'firebase/firestore';
 import { db } from '../lib/firebase';
+import { addCategory, addNominee, addEvent, submitVote, closeVoting } from '../lib/firebase-helpers';
 import type { Category, Nominee, Event } from '../types';
 
 interface Store {
@@ -13,7 +14,11 @@ interface Store {
   fetchCategories: () => Promise<void>;
   fetchNominees: () => Promise<void>;
   fetchEvents: () => Promise<void>;
+  addNewCategory: (category: Omit<Category, 'id'>) => Promise<void>;
+  addNewNominee: (nominee: Omit<Nominee, 'id'>) => Promise<void>;
+  addNewEvent: (event: Omit<Event, 'id'>) => Promise<void>;
   voteForNominee: (nomineeId: string, categoryId: string) => Promise<void>;
+  closeVotingForCategory: (categoryId: string) => Promise<void>;
   setUserId: (id: string) => void;
 }
 
@@ -23,7 +28,7 @@ export const useStore = create<Store>((set, get) => ({
   events: [],
   loading: false,
   error: null,
-  userId: '',
+  userId: '', // Simple user tracking for voting
 
   setUserId: (id: string) => set({ userId: id }),
 
@@ -37,9 +42,7 @@ export const useStore = create<Store>((set, get) => ({
       })) as Category[];
       
       set({ categories: categories.sort((a, b) => a.order - b.order) });
-      console.log('Categories fetched:', categories.length);
     } catch (error) {
-      console.error('Error fetching categories:', error);
       set({ error: 'Failed to fetch categories' });
     } finally {
       set({ loading: false });
@@ -73,10 +76,50 @@ export const useStore = create<Store>((set, get) => ({
         ...doc.data()
       })) as Event[];
       set({ events });
-      console.log('Events fetched:', events.length);
     } catch (error) {
-      console.error('Error fetching events:', error);
       set({ error: 'Failed to fetch events' });
+    } finally {
+      set({ loading: false });
+    }
+  },
+
+  addNewCategory: async (category: Omit<Category, 'id'>) => {
+    try {
+      set({ loading: true, error: null });
+      const newCategory = await addCategory(category);
+      set(state => ({
+        categories: [...state.categories, newCategory]
+      }));
+    } catch (error) {
+      set({ error: 'Failed to add category' });
+    } finally {
+      set({ loading: false });
+    }
+  },
+
+  addNewNominee: async (nominee: Omit<Nominee, 'id'>) => {
+    try {
+      set({ loading: true, error: null });
+      const newNominee = await addNominee(nominee);
+      set(state => ({
+        nominees: [...state.nominees, newNominee]
+      }));
+    } catch (error) {
+      set({ error: 'Failed to add nominee' });
+    } finally {
+      set({ loading: false });
+    }
+  },
+
+  addNewEvent: async (event: Omit<Event, 'id'>) => {
+    try {
+      set({ loading: true, error: null });
+      const newEvent = await addEvent(event);
+      set(state => ({
+        events: [...state.events, newEvent]
+      }));
+    } catch (error) {
+      set({ error: 'Failed to add event' });
     } finally {
       set({ loading: false });
     }
@@ -91,34 +134,8 @@ export const useStore = create<Store>((set, get) => ({
 
     try {
       set({ loading: true, error: null });
+      await submitVote(nomineeId, categoryId, userId);
       
-      // Check if user has already voted
-      const votesRef = collection(db, 'votes');
-      const voteQuery = query(
-        votesRef,
-        where('userId', '==', userId),
-        where('categoryId', '==', categoryId)
-      );
-      const existingVotes = await getDocs(voteQuery);
-      
-      if (!existingVotes.empty) {
-        throw new Error('You have already voted in this category');
-      }
-
-      // Update nominee votes
-      const nomineeRef = doc(db, 'nominees', nomineeId);
-      await updateDoc(nomineeRef, {
-        votes: increment(1)
-      });
-
-      // Record the vote
-      await addDoc(votesRef, {
-        userId,
-        nomineeId,
-        categoryId,
-        timestamp: new Date()
-      });
-
       // Update local state
       set(state => ({
         nominees: state.nominees.map(nominee =>
@@ -129,6 +146,31 @@ export const useStore = create<Store>((set, get) => ({
       }));
     } catch (error: any) {
       set({ error: error.message || 'Failed to submit vote' });
+    } finally {
+      set({ loading: false });
+    }
+  },
+
+  closeVotingForCategory: async (categoryId: string) => {
+    try {
+      set({ loading: true, error: null });
+      const winnerId = await closeVoting(categoryId);
+      
+      // Update local state
+      set(state => ({
+        categories: state.categories.map(category =>
+          category.id === categoryId
+            ? { ...category, isVotingOpen: false, winnerNomineeId: winnerId }
+            : category
+        ),
+        nominees: state.nominees.map(nominee =>
+          nominee.id === winnerId
+            ? { ...nominee, isWinner: true }
+            : nominee
+        )
+      }));
+    } catch (error) {
+      set({ error: 'Failed to close voting' });
     } finally {
       set({ loading: false });
     }
