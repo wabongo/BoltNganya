@@ -1,0 +1,21 @@
+{
+  "name": "Nganya Groove Awards",
+  "short_name": "Nganya Groove",
+  "description": "Celebrating Kenya's vibrant matatu culture through art, music, and innovation",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#18181B",
+  "theme_color": "#18181B",
+  "icons": [
+    {
+      "src": "/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
