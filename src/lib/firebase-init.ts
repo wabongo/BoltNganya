@@ -1,21 +1,8 @@
-import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, addDoc, writeBatch, doc } from 'firebase/firestore';
+import { collection, addDoc, writeBatch, doc } from 'firebase/firestore';
+import { db } from './firebase';
+import type { Category, Nominee, Event } from '../types';
 
-const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-// Sample data for initial setup
-const sampleCategories = [
+const sampleCategories: Omit<Category, 'id'>[] = [
   {
     name: "Best Exterior Design",
     description: "Recognizing the most creative and innovative matatu exterior designs",
@@ -36,9 +23,9 @@ const sampleCategories = [
   }
 ];
 
-const sampleNominees = [
+const sampleNominees: Omit<Nominee, 'id'>[] = [
   {
-    categoryId: "1", // Will be updated after categories are created
+    categoryId: "", // Will be updated during initialization
     name: "Thunder Express",
     description: "Known for its striking lightning-themed design and chrome accents",
     image: "https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=800",
@@ -46,7 +33,7 @@ const sampleNominees = [
     isWinner: false
   },
   {
-    categoryId: "2", // Will be updated after categories are created
+    categoryId: "", // Will be updated during initialization
     name: "Bass King",
     description: "Features a custom 10,000W sound system with perfect acoustics",
     image: "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=800",
@@ -54,7 +41,7 @@ const sampleNominees = [
     isWinner: false
   },
   {
-    categoryId: "3", // Will be updated after categories are created
+    categoryId: "", // Will be updated during initialization
     name: "Royal Cruiser",
     description: "Luxurious leather interior with LED ambient lighting",
     image: "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800",
@@ -63,7 +50,7 @@ const sampleNominees = [
   }
 ];
 
-const sampleEvents = [
+const sampleEvents: Omit<Event, 'id'>[] = [
   {
     title: "Nganya Groove Awards 2024",
     date: "2024-06-15",
@@ -73,38 +60,36 @@ const sampleEvents = [
   }
 ];
 
-// Initialize database with sample data
 export const initializeDatabase = async () => {
   try {
+    console.log('Starting database initialization...');
     const batch = writeBatch(db);
-    const categoryRefs: { [key: string]: string } = {};
+    const categoryRefs: string[] = [];
 
-    // Add categories
+    // Add categories first
     for (const category of sampleCategories) {
       const categoryRef = doc(collection(db, 'categories'));
-      categoryRefs[category.name] = categoryRef.id;
+      categoryRefs.push(categoryRef.id);
       batch.set(categoryRef, category);
     }
 
-    // Add nominees with correct category IDs
-    for (let i = 0; i < sampleNominees.length; i++) {
-      const nominee = sampleNominees[i];
-      const categoryName = sampleCategories[i].name;
+    // Add nominees with corresponding category IDs
+    sampleNominees.forEach((nominee, index) => {
       const nomineeRef = doc(collection(db, 'nominees'));
       batch.set(nomineeRef, {
         ...nominee,
-        categoryId: categoryRefs[categoryName]
+        categoryId: categoryRefs[index % categoryRefs.length] // Distribute nominees across categories
       });
-    }
+    });
 
     // Add events
-    for (const event of sampleEvents) {
+    sampleEvents.forEach((event) => {
       const eventRef = doc(collection(db, 'events'));
       batch.set(eventRef, event);
-    }
+    });
 
     await batch.commit();
-    console.log('✅ Database initialized successfully!');
+    console.log('✅ Database initialized with sample data');
     return true;
   } catch (error) {
     console.error('Error initializing database:', error);

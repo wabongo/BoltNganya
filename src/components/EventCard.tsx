@@ -1,4 +1,5 @@
 import { Calendar, MapPin } from 'lucide-react';
+import { format } from 'date-fns';
 
 interface EventCardProps {
   title: string;
@@ -9,6 +10,8 @@ interface EventCardProps {
 }
 
 export default function EventCard({ title, date, venue, description, image }: EventCardProps) {
+  const formattedDate = format(new Date(date), 'MMMM d, yyyy');
+
   return (
     <div className="group relative overflow-hidden rounded-lg shadow-xl transform transition-all duration-500 hover:-translate-y-2">
       <div className="absolute inset-0">
@@ -25,7 +28,7 @@ export default function EventCard({ title, date, venue, description, image }: Ev
         <div className="transform transition-all duration-500 group-hover:translate-y-0">
           <div className="flex items-center space-x-2 text-yellow-400 mb-3">
             <Calendar className="w-5 h-5" />
-            <p className="font-semibold">{date}</p>
+            <p className="font-semibold">{formattedDate}</p>
           </div>
           
           <h3 className="text-white text-2xl font-bold mb-3 group-hover:text-yellow-400 transition-colors duration-300">

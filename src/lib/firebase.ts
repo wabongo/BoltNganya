@@ -17,21 +17,22 @@ const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
 export const storage = getStorage(app);
 
-// Test connection and initialize if needed
 export const testConnection = async () => {
   try {
-    // Check if categories exist
-    const categoriesSnapshot = await getDocs(collection(db, 'categories'));
+    console.log('Testing Firebase connection...');
+    const categoriesRef = collection(db, 'categories');
+    const categoriesSnapshot = await getDocs(categoriesRef);
     
     if (categoriesSnapshot.empty) {
-      console.log('🏗️ No data found, initializing database...');
+      console.log('No data found, initializing database...');
       await initializeDatabase();
+      console.log('Database initialized successfully!');
     } else {
-      console.log('🔥 Firebase connection successful!');
+      console.log('Existing data found:', categoriesSnapshot.size, 'categories');
     }
     return true;
   } catch (error) {
-    console.error('❌ Firebase connection failed:', error);
+    console.error('Firebase connection error:', error);
     return false;
   }
 };

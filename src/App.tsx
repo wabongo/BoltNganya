@@ -32,14 +32,23 @@ const galleryItems = [
 ];
 
 export default function App() {
-  const { setUserId } = useStore();
+  const { setUserId, fetchCategories, fetchNominees, fetchEvents } = useStore();
 
   useEffect(() => {
-    testConnection();
-    // Simple user ID generation for demo purposes
-    // In production, use proper authentication
-    const userId = `user_${Math.random().toString(36).substr(2, 9)}`;
-    setUserId(userId);
+    const initializeApp = async () => {
+      await testConnection();
+      const userId = `user_${Math.random().toString(36).substr(2, 9)}`;
+      setUserId(userId);
+      
+      // Fetch all data after initialization
+      await Promise.all([
+        fetchCategories(),
+        fetchNominees(),
+        fetchEvents()
+      ]);
+    };
+
+    initializeApp();
   }, []);
 
   return (

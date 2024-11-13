@@ -12,17 +12,43 @@ export default function EventsSection() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-yellow-400"></div>
-      </div>
+      <section className="py-20 px-4 bg-zinc-800/50">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-yellow-400"></div>
+          </div>
+        </div>
+      </section>
     );
   }
 
   if (error) {
     return (
-      <div className="text-center text-red-400 py-8">
-        {error}
-      </div>
+      <section className="py-20 px-4 bg-zinc-800/50">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center text-red-400 py-8">
+            <p>Error: {error}</p>
+            <button 
+              onClick={fetchEvents}
+              className="mt-4 px-4 py-2 bg-yellow-400 text-black rounded-md hover:bg-yellow-300"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (!events.length) {
+    return (
+      <section className="py-20 px-4 bg-zinc-800/50">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center text-gray-400 py-8">
+            No events scheduled at the moment.
+          </div>
+        </div>
+      </section>
     );
   }
 
